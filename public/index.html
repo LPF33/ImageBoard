@@ -1,0 +1,145 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Talking about photos</title>
+    <link rel="stylesheet" href="style.css" type="text/css">
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:ital@0;1&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <h1>Talking about photos</h1>
+
+    <div id="main">
+
+        <div class="upload">
+
+            <p>Upload here your photos</p>
+
+            <label for="username">Username</label>
+            <input v-model="username" type="text" name="username" id="username">
+
+            <label for="title">Title</label>
+            <input v-model="title" type="text" name="title" id="title">
+
+            <label for="description">Description</label>
+            <input v-model="description" type="text" name="description" id="description">
+
+            <label for="tags">#tags</label>
+            <input v-model="tags" type="text" name="tags" id="tags">
+
+            <input v-on:change="fileSelected" type="file" name="file" id="file" accept="image/*">
+
+            <input v-on:click="upload" type="button" value="Upload">
+
+        </div>
+
+        <h2>Join us and share your photos with us</h2>
+        <h3>And talk about it!</h3>
+
+        <div id="imageboard">
+            <div v-for="image in images" class="images">
+                <a v-bind:href="`#${image.id}`">
+                    <img :src="image.url" :alt="image.description">
+                    <div class="imagesDiv">
+                        <p><strong>Title:</strong> <em>{{image.title}}</em></p>
+                        <p><strong>Description:</strong> <em>{{image.description}}</em></p>
+                        <p><strong>Username:</strong> <em>{{image.username}}</em></p>
+                    </div>
+                </a>
+                <div v-if="image.tags[0]" class="links">
+                    <div  v-for="link in image.tags" >
+                        <a v-bind:href="`#${link}`" class="tags">#{{link}}</a>
+                    </div>      
+                </div>
+            </div>
+        </div>
+
+        <button  id="pagination" v-if="lastID" v-on:click="nextImages">MORE</button>
+
+        <view-image v-on:close="selectedImageId=null" v-if="selectedImageId" v-bind:imageID="selectedImageId"></view-image>      
+        <view-tags v-on:close="selectedTag=null" v-if="selectedTag" v-bind:tagText="selectedTag"></view-tags>
+    </div>
+
+    <script type="text/x-template" id="template-view-image">
+        <div class="view-image">
+            <button v-on:click="closeImage">X</button>
+            <a v-if="image.nextid" v-bind:href="`#${image.nextid}`" id="next">&lt;</a>
+            <a v-if="image.previousid" v-bind:href="'#'+image.previousid" id="previous">&gt;</a>
+            <div class="view-imageSub1">
+                <div>                    
+                    <h2>{{image.title}}</h2>
+                    <img :src="image.url" :alt="image.title">                    
+                </div>
+                <div>
+                    <h4>{{image.description}}</h4>
+                    <p>{{image.username}}, uploaded at {{image.created_at}}</p>                
+
+                    <h2>Add your comment!</h2>
+
+                    <div class="makeComment">
+                        <label for="comment">Comment</label>
+                        <input v-model="comment" type="text" name="comment" id="comment">
+
+                        <label for="Username">Username</label>
+                        <input v-model="Username" type="text" name="Username" id="Username">
+
+                        <input v-on:click="sendComment" type="button" value="Send">
+                    </div>
+                    <input  v-on:click="deleteImage" type="button" value="Delete">  
+                </div>  
+            </div>
+            <div id="commentBox">
+                <h2>Comments</h2>
+                <div v-if="allComments" v-for="comment in allComments" class="comments">
+                    <p class="usercommment">{{comment.username}} wrote: <em>"{{comment.commenttext}}"</em></p>
+                    <span>{{comment.commentdate}}</span>
+
+                    <div v-if="allReply.length>0" v-for="reply in allReply" class="replytext">
+                        <p v-if="reply.comment_id===comment.id">{{reply.username}}: <em>"{{reply.replytext}}"</em></p>
+                    </div>
+                    
+                    <input type="button" class="replycomment" value="Reply" v-on:click="commentid=comment.id">
+                    <div class="replyfield" v-on:close="commentid=null"  v-if="commentid===comment.id" v-bind:commentid="commentid">
+                        
+                        <label for="replyUser">Comment</label>
+                        <input v-model="replyUser" type="text" name="replyUser" class="replyUser">
+
+                        <label for="Username2">Username</label>
+                        <input v-model="Username2" type="text" name="username" class="Username2">
+
+                        <input v-on:click="sendReply" type="button" value="Send">
+                        <button v-on:click="closeReply" class="replyX">X</button>
+                    </div>
+
+                </div> 
+            </div>    
+        </div>
+    </script>
+
+    <script type="text/x-template" id="template-view-tags">        
+        <div class="tagoverlay"> 
+            <button v-on:click="closeTagImages">X</button>           
+            <div v-for="picture in tagimages" class="tagimages">
+                <a v-bind:href="'#'+picture.id">
+                    <img :src="picture.url" :alt="picture.description">
+                    <div class="imagesDiv">
+                        <p><strong>Title:</strong> <em>{{picture.title}}</em></p>
+                        <p><strong>Description:</strong> <em>{{picture.description}}</em></p>
+                        <p><strong>Username:</strong> <em>{{picture.username}}</em></p>
+                    </div>
+                </a>
+                <div class="links">
+                    <div v-if="picture.tags" v-for="link in picture.tags" >
+                        <a v-bind:href="`#${link}`" class="tags">#{{link}}</a>
+                    </div>      
+                </div>          
+            </div>
+        </div>
+    </script>
+
+    <script src="/js/vue.js"></script>
+    <script src="/js/axios.min.js"></script>
+    <script src="/js/images.js"></script>
+</body>
+</html>
